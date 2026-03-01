@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kiegroup.org/dmn/_household-command-center"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_household-grocery-generator"
+                 name="Grocery List Generator"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kiegroup.org/dmn/_household-command-center">
+
+  <!-- Import the Meal Selector model to reuse tMeal type -->
+  <dmn:import id="_importMealSelector"
+              name="mealSelector"
+              namespace="https://kiegroup.org/dmn/_household-command-center"
+              locationURI="01_MealSelector.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Item Definition for Grocery List Output -->
+  <dmn:itemDefinition id="_tGroceryList" name="tGroceryList" isCollection="false">
+    <dmn:itemComponent id="_proteinsForBJs" name="proteinsForBJs" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_produce" name="produce" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_dairyAndFridge" name="dairyAndFridge" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_pantryCheckStock" name="pantryCheckStock" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_frozen" name="frozen" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input Data: Selected Meals (list of 7 meals for the week) -->
+  <dmn:inputData id="_selectedMeals" name="selectedMeals">
+    <dmn:variable id="_selectedMealsVar" name="selectedMeals" typeRef="mealSelector.tMeal" isCollection="true"/>
+  </dmn:inputData>
+
+  <!-- Business Knowledge Model: Aggregate Grocery Items -->
+  <dmn:businessKnowledgeModel id="_aggregateGroceries" name="Aggregate Groceries">
+    <dmn:variable id="_aggregateGroceriesVar" name="Aggregate Groceries" typeRef="tGroceryList"/>
+    <dmn:encapsulatedLogic id="_aggregateLogic" kind="FEEL">
+      <dmn:formalParameter id="_param_meals" name="meals" typeRef="mealSelector.tMeal" isCollection="true"/>
+      <dmn:context id="_aggregateContext">
+
+        <!-- Step 1: Flatten all grocery items from all meals -->
+        <dmn:contextEntry>
+          <dmn:variable id="_allItems" name="allItems" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_flattenExpr">
+            <dmn:text>flatten(for meal in meals return meal.groceryItems)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 2: Deduplicate items -->
+        <dmn:contextEntry>
+          <dmn:variable id="_uniqueItems" name="uniqueItems" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_uniqueExpr">
+            <dmn:text>distinct values(allItems)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 3: Categorize into Proteins (for BJ's bulk) -->
+        <dmn:contextEntry>
+          <dmn:variable id="_proteins" name="proteinsForBJs" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_proteinsExpr">
+            <dmn:text>uniqueItems[contains(lower case(item), "chicken") or
+                                 contains(lower case(item), "beef") or
+                                 contains(lower case(item), "pork") or
+                                 contains(lower case(item), "sausage") or
+                                 contains(lower case(item), "kielbasa") or
+                                 contains(lower case(item), "shrimp") or
+                                 contains(lower case(item), "bacon") or
+                                 contains(lower case(item), "drumstick")]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 4: Categorize into Produce -->
+        <dmn:contextEntry>
+          <dmn:variable id="_produceCat" name="produce" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_produceExpr">
+            <dmn:text>uniqueItems[contains(lower case(item), "broccoli") or
+                                 contains(lower case(item), "pepper") or
+                                 contains(lower case(item), "onion") or
+                                 contains(lower case(item), "zucchini") or
+                                 contains(lower case(item), "potato") or
+                                 contains(lower case(item), "lemon") or
+                                 contains(lower case(item), "lettuce") or
+                                 contains(lower case(item), "tomato") or
+                                 contains(lower case(item), "garlic") or
+                                 contains(lower case(item), "corn") or
+                                 contains(lower case(item), "lime") or
+                                 contains(lower case(item), "romaine")]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 5: Categorize into Dairy/Fridge -->
+        <dmn:contextEntry>
+          <dmn:variable id="_dairyCat" name="dairyAndFridge" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_dairyExpr">
+            <dmn:text>uniqueItems[contains(lower case(item), "cheese") or
+                                 contains(lower case(item), "sour cream") or
+                                 contains(lower case(item), "mozzarella") or
+                                 contains(lower case(item), "ricotta") or
+                                 contains(lower case(item), "parmesan") or
+                                 contains(lower case(item), "butter") or
+                                 contains(lower case(item), "eggs") or
+                                 contains(lower case(item), "egg")]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 6: Categorize into Pantry (check stock first) -->
+        <dmn:contextEntry>
+          <dmn:variable id="_pantryCat" name="pantryCheckStock" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_pantryExpr">
+            <dmn:text>uniqueItems[contains(lower case(item), "tortilla") or
+                                 contains(lower case(item), "pasta") or
+                                 contains(lower case(item), "rice") or
+                                 contains(lower case(item), "marinara") or
+                                 contains(lower case(item), "salsa") or
+                                 contains(lower case(item), "soy sauce") or
+                                 contains(lower case(item), "teriyaki") or
+                                 contains(lower case(item), "taco seasoning") or
+                                 contains(lower case(item), "bbq") or
+                                 contains(lower case(item), "alfredo") or
+                                 contains(lower case(item), "beans") or
+                                 contains(lower case(item), "buns") or
+                                 contains(lower case(item), "bread") or
+                                 contains(lower case(item), "pita") or
+                                 contains(lower case(item), "chili seasoning") or
+                                 contains(lower case(item), "italian seasoning") or
+                                 contains(lower case(item), "cumin") or
+                                 contains(lower case(item), "chili powder") or
+                                 contains(lower case(item), "olive oil") or
+                                 contains(lower case(item), "honey") or
+                                 contains(lower case(item), "sloppy joe")]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 7: Categorize into Frozen -->
+        <dmn:contextEntry>
+          <dmn:variable id="_frozenCat" name="frozen" typeRef="string" isCollection="true"/>
+          <dmn:literalExpression id="_frozenExpr">
+            <dmn:text>uniqueItems[contains(lower case(item), "frozen")]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+        <!-- Step 8: Return the complete grocery list structure -->
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_returnExpr">
+            <dmn:text>{
+              "proteinsForBJs": proteinsForBJs,
+              "produce": produce,
+              "dairyAndFridge": dairyAndFridge,
+              "pantryCheckStock": pantryCheckStock,
+              "frozen": frozen
+            }</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- Main Decision: Generate Grocery List -->
+  <dmn:decision id="_generateGroceryList" name="Generate Grocery List">
+    <dmn:variable id="_generateGroceryListVar" name="Generate Grocery List" typeRef="tGroceryList"/>
+    <dmn:informationRequirement id="_reqMeals">
+      <dmn:requiredInput href="#_selectedMeals"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_reqBKM">
+      <dmn:requiredKnowledge href="#_aggregateGroceries"/>
+    </dmn:knowledgeRequirement>
+
+    <!-- Invocation of the BKM -->
+    <dmn:invocation id="_invokeAggregate">
+      <dmn:literalExpression id="_invokeBKM">
+        <dmn:text>Aggregate Groceries</dmn:text>
+      </dmn:literalExpression>
+      <dmn:binding>
+        <dmn:parameter id="_bindMeals" name="meals" typeRef="mealSelector.tMeal" isCollection="true"/>
+        <dmn:literalExpression id="_bindMealsExpr">
+          <dmn:text>selectedMeals</dmn:text>
+        </dmn:literalExpression>
+      </dmn:binding>
+    </dmn:invocation>
+  </dmn:decision>
+
+  <!-- DMNDI (Diagram Information) -->
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_groceryListDiagram" name="Grocery List Generator DRG">
+
+      <!-- Input Data Shape -->
+      <dmndi:DMNShape id="_selectedMealsShape" dmnElementRef="_selectedMeals">
+        <dc:Bounds x="300" y="300" width="150" height="50"/>
+      </dmndi:DMNShape>
+
+      <!-- BKM Shape -->
+      <dmndi:DMNShape id="_aggregateGroceriesShape" dmnElementRef="_aggregateGroceries">
+        <dc:Bounds x="150" y="180" width="150" height="60"/>
+      </dmndi:DMNShape>
+
+      <!-- Decision Shape -->
+      <dmndi:DMNShape id="_generateGroceryListShape" dmnElementRef="_generateGroceryList">
+        <dc:Bounds x="320" y="80" width="150" height="80"/>
+      </dmndi:DMNShape>
+
+      <!-- Information Requirement Edge -->
+      <dmndi:DMNEdge id="_reqMealsEdge" dmnElementRef="_reqMeals">
+        <di:waypoint x="375" y="300"/>
+        <di:waypoint x="395" y="160"/>
+      </dmndi:DMNEdge>
+
+      <!-- Knowledge Requirement Edge -->
+      <dmndi:DMNEdge id="_reqBKMEdge" dmnElementRef="_reqBKM">
+        <di:waypoint x="225" y="180"/>
+        <di:waypoint x="370" y="160"/>
+      </dmndi:DMNEdge>
+
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+
+</dmn:definitions>

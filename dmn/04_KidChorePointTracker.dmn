@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kiegroup.org/dmn/_household-command-center"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_household-chore-tracker"
+                 name="Kid Chore Point Tracker"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kiegroup.org/dmn/_household-command-center">
+
+  <!-- Item Definition for Daily Chore Input -->
+  <dmn:itemDefinition id="_tDailyChores" name="tDailyChores" isCollection="false">
+    <dmn:itemComponent id="_kidName" name="kidName" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+      <dmn:allowedValues kie:constraintType="enumeration" id="_kidNameEnum">
+        <dmn:text>"Rory", "Addy", "Elly"</dmn:text>
+      </dmn:allowedValues>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_completedTasks" name="completedTasks" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_previousStreakDays" name="previousStreakDays" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_weeklyPointsSoFar" name="weeklyPointsSoFar" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Item Definition for Chore Points Output -->
+  <dmn:itemDefinition id="_tChoreResult" name="tChoreResult" isCollection="false">
+    <dmn:itemComponent id="_kidName_out" name="kidName" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_dailyPoints" name="dailyPoints" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_screenTimeUnlocked" name="screenTimeUnlocked" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_weeklyPointsTotal" name="weeklyPointsTotal" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_weeklyBonusEarned" name="weeklyBonusEarned" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_streakDays" name="streakDays" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_consistencyBonus" name="consistencyBonus" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_encouragement" name="encouragement" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_pointsNeeded" name="pointsNeeded" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input Data: Daily Chore Completion -->
+  <dmn:inputData id="_dailyChores" name="dailyChores">
+    <dmn:variable id="_dailyChoresVar" name="dailyChores" typeRef="tDailyChores"/>
+  </dmn:inputData>
+
+  <!-- Business Knowledge Model: Calculate Points for Rory -->
+  <dmn:businessKnowledgeModel id="_calculateRoryPoints" name="Calculate Rory Points">
+    <dmn:variable id="_roryPointsVar" name="Calculate Rory Points" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_roryLogic" kind="FEEL">
+      <dmn:formalParameter id="_param_tasks_rory" name="tasks" typeRef="string" isCollection="true"/>
+      <dmn:literalExpression id="_roryPointsExpr">
+        <dmn:text>
+          sum(
+            for task in tasks return
+              if task = "Make bed" then 2
+              else if task = "Clean up room" then 3
+              else if task = "Pack school stuff" then 2
+              else if task = "Homework / reading" then 4
+              else if task = "Help with dishes" then 3
+              else if task = "Pick up trash" then 2
+              else if task = "Take out trash" then 2
+              else if task = "Laundry" then 3
+              else if task = "Screen time check" then 1
+              else if task = "Help cook dinner" then 3
+              else if task = "Do something nice" then 3
+              else 0
+          )
+        </dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- Business Knowledge Model: Calculate Points for Addy/Elly -->
+  <dmn:businessKnowledgeModel id="_calculateTwinPoints" name="Calculate Twin Points">
+    <dmn:variable id="_twinPointsVar" name="Calculate Twin Points" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_twinLogic" kind="FEEL">
+      <dmn:formalParameter id="_param_tasks_twin" name="tasks" typeRef="string" isCollection="true"/>
+      <dmn:literalExpression id="_twinPointsExpr">
+        <dmn:text>
+          sum(
+            for task in tasks return
+              if task = "Make bed" then 2
+              else if task = "Clean up room" then 2
+              else if task = "Get dressed and ready" then 1
+              else if task = "Pack school stuff" then 2
+              else if task = "Homework or reading" then 3
+              else if task = "Help with dishes" then 2
+              else if task = "Pick up trash" then 2
+              else if task = "Help take out trash" then 2
+              else if task = "Put away laundry" then 2
+              else if task = "Screen time check" then 1
+              else if task = "Help cook dinner" then 3
+              else if task = "Do something nice" then 2
+              else 0
+          )
+        </dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- Main Decision: Track Chore Points -->
+  <dmn:decision id="_trackChorePoints" name="Track Chore Points">
+    <dmn:variable id="_trackPointsVar" name="Track Chore Points" typeRef="tChoreResult"/>
+    <dmn:informationRequirement id="_reqChores">
+      <dmn:requiredInput href="#_dailyChores"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_reqRoryBKM">
+      <dmn:requiredKnowledge href="#_calculateRoryPoints"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_reqTwinBKM">
+      <dmn:requiredKnowledge href="#_calculateTwinPoints"/>
+    </dmn:knowledgeRequirement>
+
+    <dmn:context id="_trackContext">
+
+      <!-- Step 1: Calculate daily points based on kid -->
+      <dmn:contextEntry>
+        <dmn:variable id="_dailyPts" name="dailyPoints" typeRef="number"/>
+        <dmn:literalExpression id="_calcDailyPoints">
+          <dmn:text>
+            if dailyChores.kidName = "Rory" then
+              Calculate Rory Points(dailyChores.completedTasks)
+            else
+              Calculate Twin Points(dailyChores.completedTasks)
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Determine daily threshold based on kid -->
+      <dmn:contextEntry>
+        <dmn:variable id="_dailyThreshold" name="dailyThreshold" typeRef="number"/>
+        <dmn:literalExpression id="_getDailyThreshold">
+          <dmn:text>
+            if dailyChores.kidName = "Rory" then 15 else 10
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Determine weekly threshold based on kid -->
+      <dmn:contextEntry>
+        <dmn:variable id="_weeklyThreshold" name="weeklyThreshold" typeRef="number"/>
+        <dmn:literalExpression id="_getWeeklyThreshold">
+          <dmn:text>
+            if dailyChores.kidName = "Rory" then 80 else 60
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Check if screen time is unlocked -->
+      <dmn:contextEntry>
+        <dmn:variable id="_screenUnlocked" name="screenTimeUnlocked" typeRef="boolean"/>
+        <dmn:literalExpression id="_checkScreenTime">
+          <dmn:text>dailyPoints >= dailyThreshold</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Calculate new weekly total -->
+      <dmn:contextEntry>
+        <dmn:variable id="_weeklyTotal" name="weeklyPointsTotal" typeRef="number"/>
+        <dmn:literalExpression id="_calcWeeklyTotal">
+          <dmn:text>dailyChores.weeklyPointsSoFar + dailyPoints</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Check if weekly bonus is earned -->
+      <dmn:contextEntry>
+        <dmn:variable id="_weeklyBonus" name="weeklyBonusEarned" typeRef="boolean"/>
+        <dmn:literalExpression id="_checkWeeklyBonus">
+          <dmn:text>weeklyPointsTotal >= weeklyThreshold</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Update streak days -->
+      <dmn:contextEntry>
+        <dmn:variable id="_streakCurrent" name="streakDays" typeRef="number"/>
+        <dmn:literalExpression id="_updateStreak">
+          <dmn:text>
+            if screenTimeUnlocked then
+              dailyChores.previousStreakDays + 1
+            else
+              0
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Check consistency bonus (5+ day streak) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_consistBonus" name="consistencyBonus" typeRef="boolean"/>
+        <dmn:literalExpression id="_checkConsistency">
+          <dmn:text>streakDays >= 5</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 9: Calculate points needed for daily goal -->
+      <dmn:contextEntry>
+        <dmn:variable id="_ptsNeeded" name="pointsNeeded" typeRef="number"/>
+        <dmn:literalExpression id="_calcNeeded">
+          <dmn:text>
+            if screenTimeUnlocked then 0
+            else dailyThreshold - dailyPoints
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 10: Generate encouragement message -->
+      <dmn:contextEntry>
+        <dmn:variable id="_encourage" name="encouragement" typeRef="string"/>
+        <dmn:literalExpression id="_genEncouragement">
+          <dmn:text>
+            if screenTimeUnlocked and streakDays >= 5 then
+              "🔥 Amazing! " + string(streakDays) + " day streak! Keep it going!"
+            else if screenTimeUnlocked then
+              "Great day! Screen time unlocked! 🎮"
+            else if pointsNeeded <= 2 then
+              "So close! Just " + string(pointsNeeded) + " more points! Finish one more task!"
+            else if pointsNeeded <= 5 then
+              "Good progress! " + string(pointsNeeded) + " points away from screen time."
+            else if dailyPoints > 0 then
+              "Good start! Keep going to unlock screen time."
+            else
+              "Tomorrow's a new day! You got this! 💪"
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 11: Return the complete result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_returnResult">
+          <dmn:text>{
+            "kidName": dailyChores.kidName,
+            "dailyPoints": dailyPoints,
+            "screenTimeUnlocked": screenTimeUnlocked,
+            "weeklyPointsTotal": weeklyPointsTotal,
+            "weeklyBonusEarned": weeklyBonusEarned,
+            "streakDays": streakDays,
+            "consistencyBonus": consistencyBonus,
+            "encouragement": encouragement,
+            "pointsNeeded": pointsNeeded
+          }</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: Get Task Point Value (for reference/lookup) -->
+  <dmn:decision id="_getTaskPoints" name="Get Task Point Value">
+    <dmn:variable id="_taskPointsVar" name="Get Task Point Value" typeRef="number"/>
+    <dmn:informationRequirement id="_reqChoresForTask">
+      <dmn:requiredInput href="#_dailyChores"/>
+    </dmn:informationRequirement>
+
+    <dmn:decisionTable id="_taskPointsTable" hitPolicy="FIRST" preferredOrientation="Rule-as-Row">
+      <dmn:input id="_input_kid">
+        <dmn:inputExpression id="_inputExpr_kid" typeRef="string">
+          <dmn:text>kidName</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:input id="_input_task">
+        <dmn:inputExpression id="_inputExpr_task" typeRef="string">
+          <dmn:text>task</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:output id="_output_points" name="points" typeRef="number"/>
+
+      <!-- Rory's Tasks -->
+      <dmn:rule id="_task_rule1">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Make bed"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule2">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Clean up room"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule3">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Pack school stuff"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule4">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Homework / reading"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>4</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule5">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Help with dishes"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule6">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Pick up trash"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule7">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Take out trash"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule8">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Laundry"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule9">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Screen time check"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>1</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule10">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Help cook dinner"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule11">
+        <dmn:inputEntry><dmn:text>"Rory"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Do something nice"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Addy/Elly Tasks -->
+      <dmn:rule id="_task_rule12">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Make bed"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule13">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Clean up room"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule14">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Get dressed and ready"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>1</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule15">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Pack school stuff"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule16">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Homework or reading"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule17">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Help with dishes"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule18">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Pick up trash"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule19">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Help take out trash"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule20">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Put away laundry"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule21">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Screen time check"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>1</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule22">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Help cook dinner"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>3</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_task_rule23">
+        <dmn:inputEntry><dmn:text>"Addy", "Elly"</dmn:text></dmn:inputEntry>
+        <dmn:inputEntry><dmn:text>"Do something nice"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry><dmn:text>2</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+    </dmn:decisionTable>
+  </dmn:decision>
+
+  <!-- DMNDI (Diagram Information) -->
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_choreTrackerDiagram" name="Kid Chore Point Tracker DRG">
+
+      <!-- Input Data Shape -->
+      <dmndi:DMNShape id="_dailyChoresShape" dmnElementRef="_dailyChores">
+        <dc:Bounds x="300" y="400" width="150" height="50"/>
+      </dmndi:DMNShape>
+
+      <!-- BKM Shapes -->
+      <dmndi:DMNShape id="_roryBKMShape" dmnElementRef="_calculateRoryPoints">
+        <dc:Bounds x="150" y="260" width="150" height="60"/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_twinBKMShape" dmnElementRef="_calculateTwinPoints">
+        <dc:Bounds x="450" y="260" width="150" height="60"/>
+      </dmndi:DMNShape>
+
+      <!-- Helper Decision Shape -->
+      <dmndi:DMNShape id="_taskPointsShape" dmnElementRef="_getTaskPoints">
+        <dc:Bounds x="650" y="260" width="150" height="60"/>
+      </dmndi:DMNShape>
+
+      <!-- Main Decision Shape -->
+      <dmndi:DMNShape id="_trackPointsShape" dmnElementRef="_trackChorePoints">
+        <dc:Bounds x="300" y="100" width="180" height="80"/>
+      </dmndi:DMNShape>
+
+      <!-- Information Requirement Edges -->
+      <dmndi:DMNEdge id="_reqChoresEdge" dmnElementRef="_reqChores">
+        <di:waypoint x="375" y="400"/>
+        <di:waypoint x="390" y="180"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqChoresForTaskEdge" dmnElementRef="_reqChoresForTask">
+        <di:waypoint x="450" y="425"/>
+        <di:waypoint x="725" y="320"/>
+      </dmndi:DMNEdge>
+
+      <!-- Knowledge Requirement Edges -->
+      <dmndi:DMNEdge id="_reqRoryBKMEdge" dmnElementRef="_reqRoryBKM">
+        <di:waypoint x="225" y="260"/>
+        <di:waypoint x="350" y="180"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqTwinBKMEdge" dmnElementRef="_reqTwinBKM">
+        <di:waypoint x="525" y="260"/>
+        <di:waypoint x="430" y="180"/>
+      </dmndi:DMNEdge>
+
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+
+</dmn:definitions>

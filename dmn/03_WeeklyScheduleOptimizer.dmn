@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kiegroup.org/dmn/_household-command-center"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_household-schedule-optimizer"
+                 name="Weekly Schedule Optimizer"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kiegroup.org/dmn/_household-command-center">
+
+  <!-- Import the Meal Selector model -->
+  <dmn:import id="_importMealSelector"
+              name="mealSelector"
+              namespace="https://kiegroup.org/dmn/_household-command-center"
+              locationURI="01_MealSelector.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Item Definition for Daily Schedule Entry -->
+  <dmn:itemDefinition id="_tDailySchedule" name="tDailySchedule" isCollection="false">
+    <dmn:itemComponent id="_dayOfWeek_sched" name="dayOfWeek" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_workLoad" name="workLoad" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+      <dmn:allowedValues kie:constraintType="enumeration" id="_workLoadEnum">
+        <dmn:text>"light", "normal", "heavy"</dmn:text>
+      </dmn:allowedValues>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_kidsActivities" name="kidsActivities" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_eveningFree" name="eveningFree" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_energyLevel_override" name="energyLevelOverride" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Item Definition for Optimized Weekly Plan Output -->
+  <dmn:itemDefinition id="_tWeeklyPlan" name="tWeeklyPlan" isCollection="false">
+    <dmn:itemComponent id="_weeklyMeals" name="weeklyMeals" isCollection="true">
+      <dmn:typeRef>mealSelector.tMeal</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_crockpotAlertDays" name="crockpotAlertDays" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_heavyDayCount" name="heavyDayCount" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_notes" name="notes" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input Data: Daily Schedule (7 days) -->
+  <dmn:inputData id="_dailySchedule" name="dailySchedule">
+    <dmn:variable id="_dailyScheduleVar" name="dailySchedule" typeRef="tDailySchedule" isCollection="true"/>
+  </dmn:inputData>
+
+  <!-- Input Data: Week Number -->
+  <dmn:inputData id="_weekNumber" name="weekNumber">
+    <dmn:variable id="_weekNumberVar" name="weekNumber" typeRef="number"/>
+  </dmn:inputData>
+
+  <!-- Main Decision: Optimize Weekly Schedule -->
+  <dmn:decision id="_optimizeWeeklySchedule" name="Optimize Weekly Schedule">
+    <dmn:variable id="_optimizeVar" name="Optimize Weekly Schedule" typeRef="tWeeklyPlan"/>
+    <dmn:informationRequirement id="_reqDailySchedule">
+      <dmn:requiredInput href="#_dailySchedule"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_reqWeekNumber">
+      <dmn:requiredInput href="#_weekNumber"/>
+    </dmn:informationRequirement>
+
+    <dmn:context id="_optimizeContext">
+
+      <!-- Step 1: Count heavy days to determine if we need extra leftover night -->
+      <dmn:contextEntry>
+        <dmn:variable id="_heavyCount" name="heavyDayCount" typeRef="number"/>
+        <dmn:literalExpression id="_countHeavy">
+          <dmn:text>count(dailySchedule[workLoad = "heavy"])</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Determine energy level and schedule busyness for each day -->
+      <dmn:contextEntry>
+        <dmn:variable id="_enrichedSchedule" name="enrichedSchedule"/>
+        <dmn:literalExpression id="_enrichExpr">
+          <dmn:text>for day in dailySchedule return {
+            "dayOfWeek": day.dayOfWeek,
+            "energyLevel": if day.energyLevelOverride != null then day.energyLevelOverride
+                          else if day.workLoad = "heavy" and day.kidsActivities then "low"
+                          else if day.workLoad = "heavy" then "low"
+                          else if day.workLoad = "light" then "high"
+                          else "medium",
+            "scheduleBusyness": if day.workLoad = "heavy" and day.kidsActivities then "packed"
+                               else if not(day.eveningFree) then "packed"
+                               else if day.workLoad = "light" then "light"
+                               else "normal",
+            "needsCrockpot": (day.workLoad = "heavy" and day.kidsActivities) or not(day.eveningFree)
+          }</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: For each day, select the meal (this simulates calling the Meal Selector decision) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_selectedMeals" name="weeklyMeals" typeRef="mealSelector.tMeal" isCollection="true"/>
+        <dmn:literalExpression id="_selectMealsExpr">
+          <dmn:text>
+            // Note: In a full implementation, this would invoke the Meal Selector decision for each day
+            // For now, this is a placeholder that returns the enriched schedule
+            // The actual invocation would be done through the decision service or API
+            enrichedSchedule
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Identify crockpot alert days -->
+      <dmn:contextEntry>
+        <dmn:variable id="_crockpotDays" name="crockpotAlertDays" typeRef="string" isCollection="true"/>
+        <dmn:literalExpression id="_crockpotExpr">
+          <dmn:text>enrichedSchedule[needsCrockpot = true or scheduleBusyness = "packed"].dayOfWeek</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Generate notes based on the week analysis -->
+      <dmn:contextEntry>
+        <dmn:variable id="_planNotes" name="notes" typeRef="string" isCollection="true"/>
+        <dmn:literalExpression id="_notesExpr">
+          <dmn:text>
+            if heavyDayCount >= 3 then
+              ["Heavy week detected. Consider extra leftover night.", "Crockpot meals scheduled on: " + string(crockpotAlertDays)]
+            else if heavyDayCount >= 1 then
+              ["Moderate week. Crockpot alerts: " + string(crockpotAlertDays)]
+            else
+              ["Light week! More cooking flexibility.", "Crockpot alerts: " + string(crockpotAlertDays)]
+          </dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Return the complete weekly plan -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_returnPlan">
+          <dmn:text>{
+            "weeklyMeals": weeklyMeals,
+            "crockpotAlertDays": crockpotAlertDays,
+            "heavyDayCount": heavyDayCount,
+            "notes": notes
+          }</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Helper Decision: Map Schedule to Energy Level -->
+  <dmn:decision id="_mapScheduleToEnergy" name="Map Schedule to Energy">
+    <dmn:variable id="_mapEnergyVar" name="Map Schedule to Energy" typeRef="string"/>
+    <dmn:informationRequirement id="_reqScheduleForEnergy">
+      <dmn:requiredInput href="#_dailySchedule"/>
+    </dmn:informationRequirement>
+
+    <dmn:decisionTable id="_energyMappingTable" hitPolicy="FIRST" preferredOrientation="Rule-as-Row">
+      <dmn:input id="_input_workLoad">
+        <dmn:inputExpression id="_inputExpr_workLoad" typeRef="string">
+          <dmn:text>workLoad</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:input id="_input_kidsAct">
+        <dmn:inputExpression id="_inputExpr_kidsAct" typeRef="boolean">
+          <dmn:text>kidsActivities</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:output id="_output_energy" name="energyLevel" typeRef="string"/>
+
+      <!-- Heavy workload with kids activities = low energy -->
+      <dmn:rule id="_energy_rule1">
+        <dmn:inputEntry id="_er1_in1">
+          <dmn:text>"heavy"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_er1_in2">
+          <dmn:text>true</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_er1_out">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Heavy workload alone = low energy -->
+      <dmn:rule id="_energy_rule2">
+        <dmn:inputEntry id="_er2_in1">
+          <dmn:text>"heavy"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_er2_in2">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_er2_out">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Light workload = high energy -->
+      <dmn:rule id="_energy_rule3">
+        <dmn:inputEntry id="_er3_in1">
+          <dmn:text>"light"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_er3_in2">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_er3_out">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Normal workload = medium energy -->
+      <dmn:rule id="_energy_rule4">
+        <dmn:inputEntry id="_er4_in1">
+          <dmn:text>"normal"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_er4_in2">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_er4_out">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+    </dmn:decisionTable>
+  </dmn:decision>
+
+  <!-- DMNDI (Diagram Information) -->
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_scheduleOptimizerDiagram" name="Weekly Schedule Optimizer DRG">
+
+      <!-- Input Data Shapes -->
+      <dmndi:DMNShape id="_dailyScheduleShape" dmnElementRef="_dailySchedule">
+        <dc:Bounds x="200" y="350" width="150" height="50"/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_weekNumberShape" dmnElementRef="_weekNumber">
+        <dc:Bounds x="400" y="350" width="120" height="50"/>
+      </dmndi:DMNShape>
+
+      <!-- Helper Decision Shape -->
+      <dmndi:DMNShape id="_mapEnergyShape" dmnElementRef="_mapScheduleToEnergy">
+        <dc:Bounds x="150" y="220" width="150" height="60"/>
+      </dmndi:DMNShape>
+
+      <!-- Main Decision Shape -->
+      <dmndi:DMNShape id="_optimizeShape" dmnElementRef="_optimizeWeeklySchedule">
+        <dc:Bounds x="300" y="80" width="180" height="80"/>
+      </dmndi:DMNShape>
+
+      <!-- Information Requirement Edges -->
+      <dmndi:DMNEdge id="_reqScheduleEdge" dmnElementRef="_reqDailySchedule">
+        <di:waypoint x="275" y="350"/>
+        <di:waypoint x="390" y="160"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqWeekEdge" dmnElementRef="_reqWeekNumber">
+        <di:waypoint x="460" y="350"/>
+        <di:waypoint x="420" y="160"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqScheduleForEnergyEdge" dmnElementRef="_reqScheduleForEnergy">
+        <di:waypoint x="250" y="350"/>
+        <di:waypoint x="225" y="280"/>
+      </dmndi:DMNEdge>
+
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+
+</dmn:definitions>

@@ -1,0 +1,826 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kiegroup.org/dmn/_household-command-center"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_household-meal-selector"
+                 name="Meal Selector"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kiegroup.org/dmn/_household-command-center">
+
+  <!-- Item Definition for Meal Output Structure -->
+  <dmn:itemDefinition id="_tMeal" name="tMeal" isCollection="false">
+    <dmn:itemComponent id="_mealName" name="mealName" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_cookingMethod" name="cookingMethod" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_activeTime" name="activeTime" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_prepInstructions" name="prepInstructions" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_servingNotes" name="servingNotes" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_leftoverPotential" name="leftoverPotential" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_groceryItems" name="groceryItems" isCollection="true">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input Data: Day of Week -->
+  <dmn:inputData id="_dayOfWeek" name="dayOfWeek">
+    <dmn:variable id="_dayOfWeekVar" name="dayOfWeek" typeRef="string"/>
+  </dmn:inputData>
+
+  <!-- Input Data: Energy Level -->
+  <dmn:inputData id="_energyLevel" name="energyLevel">
+    <dmn:variable id="_energyLevelVar" name="energyLevel" typeRef="string"/>
+  </dmn:inputData>
+
+  <!-- Input Data: Schedule Busyness -->
+  <dmn:inputData id="_scheduleBusyness" name="scheduleBusyness">
+    <dmn:variable id="_scheduleBusynessVar" name="scheduleBusyness" typeRef="string"/>
+  </dmn:inputData>
+
+  <!-- Input Data: Week Number -->
+  <dmn:inputData id="_weekNumber" name="weekNumber">
+    <dmn:variable id="_weekNumberVar" name="weekNumber" typeRef="number"/>
+  </dmn:inputData>
+
+  <!-- Main Decision: Select Meal -->
+  <dmn:decision id="_selectMeal" name="Select Meal">
+    <dmn:variable id="_selectMealVar" name="Select Meal" typeRef="tMeal"/>
+    <dmn:informationRequirement id="_reqDay">
+      <dmn:requiredInput href="#_dayOfWeek"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_reqEnergy">
+      <dmn:requiredInput href="#_energyLevel"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_reqSchedule">
+      <dmn:requiredInput href="#_scheduleBusyness"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_reqWeek">
+      <dmn:requiredInput href="#_weekNumber"/>
+    </dmn:informationRequirement>
+
+    <dmn:decisionTable id="_selectMealTable" hitPolicy="FIRST" preferredOrientation="Rule-as-Row" outputLabel="Select Meal">
+      <!-- Input Columns -->
+      <dmn:input id="_input1">
+        <dmn:inputExpression id="_inputExpr1" typeRef="string">
+          <dmn:text>dayOfWeek</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:input id="_input2">
+        <dmn:inputExpression id="_inputExpr2" typeRef="string">
+          <dmn:text>energyLevel</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:input id="_input3">
+        <dmn:inputExpression id="_inputExpr3" typeRef="string">
+          <dmn:text>scheduleBusyness</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:input id="_input4">
+        <dmn:inputExpression id="_inputExpr4" typeRef="number">
+          <dmn:text>weekNumber</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+
+      <!-- Output Column -->
+      <dmn:output id="_output1" name="mealName" typeRef="string"/>
+      <dmn:output id="_output2" name="cookingMethod" typeRef="string"/>
+      <dmn:output id="_output3" name="activeTime" typeRef="string"/>
+      <dmn:output id="_output4" name="prepInstructions" typeRef="string"/>
+      <dmn:output id="_output5" name="servingNotes" typeRef="string"/>
+      <dmn:output id="_output6" name="leftoverPotential" typeRef="string"/>
+      <dmn:output id="_output7" name="groceryItems" typeRef="string"/>
+
+      <!-- HIGHEST PRIORITY RULES: Hard Constraints -->
+
+      <!-- Rule 1: Tuesday is ALWAYS Beef Tacos -->
+      <dmn:rule id="_rule1">
+        <dmn:inputEntry id="_rule1_input1">
+          <dmn:text>"Tuesday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule1_input2">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule1_input3">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule1_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule1_output1">
+          <dmn:text>"Beef Tacos"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output3">
+          <dmn:text>"20 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output4">
+          <dmn:text>"Brown ground beef with taco seasoning. Set out toppings bar."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output5">
+          <dmn:text>"Cheese, lettuce, salsa, sour cream, tortillas"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule1_output7">
+          <dmn:text>["Ground beef (80/20)", "Taco seasoning", "Flour tortillas", "Shredded Mexican cheese", "Lettuce", "Tomatoes", "Salsa", "Sour cream"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 2: Saturday is ALWAYS Leftover Night -->
+      <dmn:rule id="_rule2">
+        <dmn:inputEntry id="_rule2_input1">
+          <dmn:text>"Saturday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule2_input2">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule2_input3">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule2_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule2_output1">
+          <dmn:text>"LEFTOVER NIGHT"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output2">
+          <dmn:text>"none"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output3">
+          <dmn:text>"5 min reheat"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output4">
+          <dmn:text>"Clean out the fridge. Everyone picks what's left."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output5">
+          <dmn:text>"No cooking. No guilt. Reduce waste."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output6">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule2_output7">
+          <dmn:text>[]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- SECOND PRIORITY: Crashed Energy Override (any day except Tuesday/Saturday) -->
+
+      <!-- Rule 3: Crashed energy = Black Bean Quesadillas -->
+      <dmn:rule id="_rule3">
+        <dmn:inputEntry id="_rule3_input1">
+          <dmn:text>not("Tuesday", "Saturday")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule3_input2">
+          <dmn:text>"crashed"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule3_input3">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule3_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule3_output1">
+          <dmn:text>"Black Bean Quesadillas"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output3">
+          <dmn:text>"15 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output4">
+          <dmn:text>"Tortillas + cheese + canned black beans + salsa. Pan crisp."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output5">
+          <dmn:text>"Fastest dinner in the rotation. Kids can build their own."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output6">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule3_output7">
+          <dmn:text>["Flour tortillas", "Shredded Mexican cheese", "Canned black beans", "Salsa"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- THIRD PRIORITY: Packed Schedule Override -->
+
+      <!-- Rule 4: Packed schedule on Monday = Crockpot Italian Chicken -->
+      <dmn:rule id="_rule4">
+        <dmn:inputEntry id="_rule4_input1">
+          <dmn:text>"Monday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule4_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule4_input3">
+          <dmn:text>"packed"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule4_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule4_output1">
+          <dmn:text>"Crockpot Italian Chicken"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output2">
+          <dmn:text>"crockpot"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output3">
+          <dmn:text>"10 min prep"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output4">
+          <dmn:text>"Chicken breasts + jar marinara + Italian seasoning. Low 6 hrs. Shred."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output5">
+          <dmn:text>"Serve over pasta or on rolls. Doubles as Tue lunch."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule4_output7">
+          <dmn:text>["Chicken breasts (boneless)", "Marinara sauce (jar)", "Italian seasoning", "Pasta (1 lb)", "Buns or rolls"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 5: Packed schedule on Wednesday = Crockpot Chicken Tacos -->
+      <dmn:rule id="_rule5">
+        <dmn:inputEntry id="_rule5_input1">
+          <dmn:text>"Wednesday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule5_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule5_input3">
+          <dmn:text>"packed"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule5_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule5_output1">
+          <dmn:text>"Crockpot Chicken Tacos"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output2">
+          <dmn:text>"crockpot"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output3">
+          <dmn:text>"5 min prep"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output4">
+          <dmn:text>"Chicken breasts + salsa + cumin + chili powder. Low 6 hrs. Shred."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output5">
+          <dmn:text>"Tortillas, cheese, sour cream. Leftovers = quesadillas."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule5_output7">
+          <dmn:text>["Chicken breasts (boneless)", "Salsa", "Cumin", "Chili powder", "Flour tortillas", "Shredded Mexican cheese", "Sour cream"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 6: Packed schedule on other days = Breakfast for Dinner -->
+      <dmn:rule id="_rule6">
+        <dmn:inputEntry id="_rule6_input1">
+          <dmn:text>not("Monday", "Tuesday", "Wednesday", "Saturday")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule6_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule6_input3">
+          <dmn:text>"packed"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule6_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule6_output1">
+          <dmn:text>"Breakfast for Dinner"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output3">
+          <dmn:text>"20 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output4">
+          <dmn:text>"Scrambled eggs, bacon or sausage, toast."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output5">
+          <dmn:text>"Kids love it. You love it. Everyone wins."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output6">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule6_output7">
+          <dmn:text>["Eggs (1 dozen)", "Bacon", "Bread"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- DAY-SPECIFIC DEFAULTS with Energy Consideration -->
+
+      <!-- Rule 7: Friday default (high/medium energy) = Grilled Italian Sausages -->
+      <dmn:rule id="_rule7">
+        <dmn:inputEntry id="_rule7_input1">
+          <dmn:text>"Friday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule7_input2">
+          <dmn:text>"high", "medium"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule7_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule7_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule7_output1">
+          <dmn:text>"Grilled Italian Sausages"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output2">
+          <dmn:text>"grill"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output3">
+          <dmn:text>"20 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output4">
+          <dmn:text>"Grill sausages + zucchini and peppers on the side."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output5">
+          <dmn:text>"Easy Friday. Serve with leftover rice or rolls."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule7_output7">
+          <dmn:text>["Italian sausage links", "Zucchini", "Bell peppers", "Rice", "Buns or rolls"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 8: Friday low energy = Chicken Alfredo (quick stovetop) -->
+      <dmn:rule id="_rule8">
+        <dmn:inputEntry id="_rule8_input1">
+          <dmn:text>"Friday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule8_input2">
+          <dmn:text>"low"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule8_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule8_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule8_output1">
+          <dmn:text>"Chicken Alfredo"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output4">
+          <dmn:text>"Cook pasta. Pan sear chicken. Jar alfredo sauce."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output5">
+          <dmn:text>"Not the healthiest but sometimes you need comfort."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule8_output7">
+          <dmn:text>["Chicken breasts (boneless)", "Pasta (1 lb)", "Alfredo sauce (jar)"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 9: Sunday Week 1 = Sheet Pan Sausage and Potatoes -->
+      <dmn:rule id="_rule9">
+        <dmn:inputEntry id="_rule9_input1">
+          <dmn:text>"Sunday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule9_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule9_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule9_input4">
+          <dmn:text>1</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule9_output1">
+          <dmn:text>"Sheet Pan Sausage and Potatoes"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output2">
+          <dmn:text>"sheet-pan"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output3">
+          <dmn:text>"30 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output4">
+          <dmn:text>"Cube potatoes, slice kielbasa, olive oil + seasoning. 400F 25 min."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output5">
+          <dmn:text>"Cook while filling out next week's meal plan."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule9_output7">
+          <dmn:text>["Kielbasa", "Potatoes", "Olive oil"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 10: Sunday Week 2 = Breakfast for Dinner -->
+      <dmn:rule id="_rule10">
+        <dmn:inputEntry id="_rule10_input1">
+          <dmn:text>"Sunday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule10_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule10_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule10_input4">
+          <dmn:text>2</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule10_output1">
+          <dmn:text>"Breakfast for Dinner"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output3">
+          <dmn:text>"20 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output4">
+          <dmn:text>"Scrambled eggs, bacon or sausage, toast."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output5">
+          <dmn:text>"Kids love it. You love it. Everyone wins."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output6">
+          <dmn:text>"low"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule10_output7">
+          <dmn:text>["Eggs (1 dozen)", "Bacon", "Bread"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 11: Monday Week 1, high/medium energy, normal/light schedule = Honey Garlic Chicken -->
+      <dmn:rule id="_rule11">
+        <dmn:inputEntry id="_rule11_input1">
+          <dmn:text>"Monday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule11_input2">
+          <dmn:text>"high", "medium"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule11_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule11_input4">
+          <dmn:text>1</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule11_output1">
+          <dmn:text>"Honey Garlic Chicken Thighs"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output2">
+          <dmn:text>"sheet-pan"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output4">
+          <dmn:text>"Chicken thighs + honey, soy sauce, garlic glaze. 400F for 22 min. Broil 2 min."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output5">
+          <dmn:text>"Serve with rice and steamed broccoli. Great leftover lunch."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule11_output7">
+          <dmn:text>["Chicken thighs (boneless)", "Honey", "Soy sauce", "Garlic", "Rice", "Broccoli"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 12: Monday Week 2, high/medium energy = Crockpot Chicken Tacos -->
+      <dmn:rule id="_rule12">
+        <dmn:inputEntry id="_rule12_input1">
+          <dmn:text>"Monday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule12_input2">
+          <dmn:text>"high", "medium"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule12_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule12_input4">
+          <dmn:text>2</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule12_output1">
+          <dmn:text>"Crockpot Chicken Tacos"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output2">
+          <dmn:text>"crockpot"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output3">
+          <dmn:text>"5 min prep"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output4">
+          <dmn:text>"Chicken breasts + salsa + cumin + chili powder. Low 6 hrs. Shred."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output5">
+          <dmn:text>"Tortillas, cheese, sour cream. Leftovers = quesadillas."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule12_output7">
+          <dmn:text>["Chicken breasts (boneless)", "Salsa", "Cumin", "Chili powder", "Flour tortillas", "Shredded Mexican cheese", "Sour cream"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 13: Monday low energy = Chicken Stir Fry (quick stovetop) -->
+      <dmn:rule id="_rule13">
+        <dmn:inputEntry id="_rule13_input1">
+          <dmn:text>"Monday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule13_input2">
+          <dmn:text>"low"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule13_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule13_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule13_output1">
+          <dmn:text>"Chicken Stir Fry"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output4">
+          <dmn:text>"Slice chicken thighs. Stir fry with frozen veggies. Soy sauce + garlic."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output5">
+          <dmn:text>"Serve over rice. Cook extra rice for the week."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule13_output7">
+          <dmn:text>["Chicken thighs (boneless)", "Frozen stir fry veggies", "Soy sauce", "Garlic", "Rice"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 14: Wednesday Week 1, high/medium energy = Crockpot Italian Chicken -->
+      <dmn:rule id="_rule14">
+        <dmn:inputEntry id="_rule14_input1">
+          <dmn:text>"Wednesday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule14_input2">
+          <dmn:text>"high", "medium"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule14_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule14_input4">
+          <dmn:text>1</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule14_output1">
+          <dmn:text>"Crockpot Italian Chicken"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output2">
+          <dmn:text>"crockpot"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output3">
+          <dmn:text>"10 min prep"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output4">
+          <dmn:text>"Chicken breasts + jar marinara + Italian seasoning. Low 6 hrs. Shred."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output5">
+          <dmn:text>"Serve over pasta or on rolls. Doubles as Thu lunch."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule14_output7">
+          <dmn:text>["Chicken breasts (boneless)", "Marinara sauce (jar)", "Italian seasoning", "Pasta (1 lb)", "Buns or rolls"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 15: Wednesday Week 2, high/medium energy = Pasta with Meat Sauce -->
+      <dmn:rule id="_rule15">
+        <dmn:inputEntry id="_rule15_input1">
+          <dmn:text>"Wednesday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule15_input2">
+          <dmn:text>"high", "medium"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule15_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule15_input4">
+          <dmn:text>2</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule15_output1">
+          <dmn:text>"Pasta with Meat Sauce"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output4">
+          <dmn:text>"Brown ground beef, add jar marinara, simmer. Boil pasta."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output5">
+          <dmn:text>"Classic. No complaints. Reheats perfectly."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output6">
+          <dmn:text>"high"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule15_output7">
+          <dmn:text>["Ground beef (80/20)", "Marinara sauce (jar)", "Pasta (1 lb)"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 16: Wednesday low energy = Sloppy Joes -->
+      <dmn:rule id="_rule16">
+        <dmn:inputEntry id="_rule16_input1">
+          <dmn:text>"Wednesday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule16_input2">
+          <dmn:text>"low"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule16_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule16_input4">
+          <dmn:text>-</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule16_output1">
+          <dmn:text>"Sloppy Joes"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output3">
+          <dmn:text>"20 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output4">
+          <dmn:text>"Brown ground beef, add sloppy joe sauce. Serve on buns."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output5">
+          <dmn:text>"Kids always eat this. Quick and easy."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule16_output7">
+          <dmn:text>["Ground beef (80/20)", "Sloppy joe sauce", "Buns or rolls"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 17: Thursday Week 1 = Chicken Stir Fry (quick stovetop for late week) -->
+      <dmn:rule id="_rule17">
+        <dmn:inputEntry id="_rule17_input1">
+          <dmn:text>"Thursday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule17_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule17_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule17_input4">
+          <dmn:text>1</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule17_output1">
+          <dmn:text>"Chicken Stir Fry"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output2">
+          <dmn:text>"stovetop"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output4">
+          <dmn:text>"Slice chicken thighs. Stir fry with frozen veggies. Soy sauce + garlic."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output5">
+          <dmn:text>"Serve over rice. Cook extra rice for the week."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule17_output7">
+          <dmn:text>["Chicken thighs (boneless)", "Frozen stir fry veggies", "Soy sauce", "Garlic", "Rice"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+      <!-- Rule 18: Thursday Week 2 = Teriyaki Chicken Thighs -->
+      <dmn:rule id="_rule18">
+        <dmn:inputEntry id="_rule18_input1">
+          <dmn:text>"Thursday"</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule18_input2">
+          <dmn:text>not("crashed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule18_input3">
+          <dmn:text>not("packed")</dmn:text>
+        </dmn:inputEntry>
+        <dmn:inputEntry id="_rule18_input4">
+          <dmn:text>2</dmn:text>
+        </dmn:inputEntry>
+        <dmn:outputEntry id="_rule18_output1">
+          <dmn:text>"Teriyaki Chicken Thighs"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output2">
+          <dmn:text>"sheet-pan"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output3">
+          <dmn:text>"25 min"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output4">
+          <dmn:text>"Chicken thighs + bottled teriyaki. 400F 22 min. Broil 2 min."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output5">
+          <dmn:text>"Serve with rice and steamed broccoli."</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output6">
+          <dmn:text>"medium"</dmn:text>
+        </dmn:outputEntry>
+        <dmn:outputEntry id="_rule18_output7">
+          <dmn:text>["Chicken thighs (boneless)", "Teriyaki sauce", "Rice", "Broccoli"]</dmn:text>
+        </dmn:outputEntry>
+      </dmn:rule>
+
+    </dmn:decisionTable>
+  </dmn:decision>
+
+  <!-- DMNDI (Diagram Information) -->
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_mealSelectorDiagram" name="Meal Selector DRG">
+      <!-- Input Data Shapes -->
+      <dmndi:DMNShape id="_dayOfWeekShape" dmnElementRef="_dayOfWeek">
+        <dc:Bounds x="150" y="300" width="100" height="50"/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_energyLevelShape" dmnElementRef="_energyLevel">
+        <dc:Bounds x="300" y="300" width="100" height="50"/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_scheduleBusynessShape" dmnElementRef="_scheduleBusyness">
+        <dc:Bounds x="450" y="300" width="100" height="50"/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="_weekNumberShape" dmnElementRef="_weekNumber">
+        <dc:Bounds x="600" y="300" width="100" height="50"/>
+      </dmndi:DMNShape>
+
+      <!-- Decision Shape -->
+      <dmndi:DMNShape id="_selectMealShape" dmnElementRef="_selectMeal">
+        <dc:Bounds x="350" y="150" width="150" height="80"/>
+      </dmndi:DMNShape>
+
+      <!-- Information Requirement Edges -->
+      <dmndi:DMNEdge id="_reqDayEdge" dmnElementRef="_reqDay">
+        <di:waypoint x="200" y="300"/>
+        <di:waypoint x="400" y="230"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqEnergyEdge" dmnElementRef="_reqEnergy">
+        <di:waypoint x="350" y="300"/>
+        <di:waypoint x="415" y="230"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqScheduleEdge" dmnElementRef="_reqSchedule">
+        <di:waypoint x="500" y="300"/>
+        <di:waypoint x="450" y="230"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="_reqWeekEdge" dmnElementRef="_reqWeek">
+        <di:waypoint x="650" y="300"/>
+        <di:waypoint x="480" y="230"/>
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+
+</dmn:definitions>
